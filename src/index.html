@@ -12,12 +12,68 @@
     <div class="container header__wrapper">
       <h1>ASYNC RACE</h1>
       <ul class="menu">
-        <li class="menu__item">Garage</li>
-        <li class="menu__item">Winners</li>
+        <li class="menu__item active" data-target="garage">Garage</li>
+        <li class="menu__item" data-target="winners">Winners</li>
       </ul>
     </div>
   </header>
-  <main class="main"></main>
+  <main class="main">
+    <div class="container">
+      <div class="garage show">
+       <div class="garage__options">
+        <div class="cars__count">
+          <div class="cars-amount">
+            <span class="cars-amount__text">CARS:</span>
+            <span class="cars-amount__num">100</span>
+          </div>
+          <button class="btn add-cars">+100</button>
+          <div class="pagination">
+            <span class="pagination__current">1</span>
+            <span class="pagination__sep">/</span>
+            <span class="pagination__total">1</span>
+          </div>
+        </div>
+        <div class="create-car">
+          <select class="create-car__brands">
+            <option value="Audi">Audi</option>
+            <option value="BMW">BMW</option>
+            <option value="Citroen">Citroen</option>
+            <option value="Fiat">Fiat</option>
+            <option value="Ford">Ford</option>
+            <option value="Honda">Honda</option>
+            <option value="Hyundai">Hyundai</option>
+            <option value="Jaguar">Jaguar</option>
+            <option value="Kia">Kia</option>
+            <option value="Mazda">Mazda</option>
+            <option value="Mersedes">Mersedes</option>
+            <option value="Mini">Mini</option>
+            <option value="Mitsubishi">Mitsubishi</option>
+            <option value="Peugeot">Peugeot</option>
+            <option value="Pontiac">Pontiac</option>
+            <option value="Porsche">Porsche</option>
+            <option value="Suzuki">Suzuki</option>
+            <option value="Tesla">Tesla</option>
+            <option value="Volkswagen">Volkswagen</option>
+            <option value="Volvo">Volvo</option>
+          </select>
+          <input class="create-car__name" type="text" maxlength="20">
+          <input class="input-color create-car__color" type="color" value="#65b6cb">
+          <button class="btn create-btn">create</button>
+        </div>
+        <div class="cars__buttons">
+          <button class="btn race-btn">race</button>
+          <button class="btn reset-btn">reset</button>
+        </div>
+       </div>
+       <div class="garage__cars">
+      
+       </div>
+      </div>
+      <div class="winners">
+        winners
+      </div>
+    </div>
+  </main>
   <footer class="footer">
     <div class="container footer__wrapper">
       <a href="https://github.com/nazimajumaniyazova">GitHub</a>
