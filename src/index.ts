@@ -6,9 +6,9 @@
 /* eslint-disable no-use-before-define */
 import './styles/style.scss';
 import createCarBox from './ui';
+import randomWords from './randomWords';
 
-displayAllCars();
-
+const carBrands = ['Audi', 'BMW', 'Citroen', 'Fiat', 'Ford', 'Honda', 'Hyundai', 'Jaguar', 'Kia', 'Mazda', 'Mersedes', 'Mini', 'Mitsubishi', 'Peugeot', 'Pontiac', 'Porsche', 'Suzuki', 'Tesla', 'Volkswagen', 'Volvo'];
 const sectionGarage = document.querySelector('.garage')!;
 const sectionWinners = document.querySelector('.winners')!;
 const menu = document.querySelector('.menu');
@@ -90,16 +90,22 @@ async function getCar(carID?: number) {
   const cars: Array<{name: string, color: string, id: number}> = data;
   return cars;
 }
-createCarBtn.addEventListener('click', () => {
+createCarBtn.addEventListener('click', async () => {
   const carDetails = {
     name: `${createCarSelectBrand.value} ${createCarName.value}`,
     color: createCarColor.value,
   };
   createCarSelectBrand.value = 'Audi';
   createCarName.value = '';
-  createCar(carDetails).then((catId) => {
-    displayCar(carDetails.name, carDetails.color, catId);
-  });
+  // createCar(carDetails).then((catId) => {
+  //   displayCar(carDetails.name, carDetails.color, catId);
+  // })
+  await createCar(carDetails);
+  // pagination().then((cars) => {
+  //   displayAllCars(cars);
+  // });
+  displayCarsTotalNum();
+  displayTotalPages();
 });
 
 // UPDATE CAR
@@ -118,6 +124,10 @@ garageCars.addEventListener('click', (event: Event) => {
     const carId = eventTargetClosest?.getAttribute('data-id')!;
     removeCar(+carId);
     eventTargetClosest?.remove();
+    displayCarsTotalNum();
+    // pagination().then((cars) => {
+    //   displayAllCars(cars);
+    // });
   }
   if (eventTarget.classList.contains('car__box__edit')) {
     editCar.classList.remove('show');
@@ -166,17 +176,109 @@ function updateCurrentCar(eventTargetBox: HTMLElement) {
   changeCar(eventTargetBox, updateCarDetails.name, updateCarDetails.color);
 }
 // Display All CARS
-function displayCar(carName: string, carColor: string, carId: number) {
-  const carBox = createCarBox(carName, carColor, carId);
-  garageCars.insertAdjacentHTML('beforeend', carBox);
-}
+// function displayCar(carName: string, carColor: string, carId: number) {
+//   const carBox = createCarBox(carName, carColor, carId);
+//   garageCars.insertAdjacentHTML('beforeend', carBox);
+// }
 
-function displayAllCars() {
-  getCar().then((response) => {
-    response.map((item) => {
-      const carBox = createCarBox(item.name, item.color, item.id);
-      garageCars.insertAdjacentHTML('beforeend', carBox);
-      return '';
-    });
+function displayAllCars(cars:Array<{name: string, color: string, id: number}>) {
+  // getCar().then((response) => {
+  //   response.map((item) => {
+  //     const carBox = createCarBox(item.name, item.color, item.id);
+  //     garageCars.insertAdjacentHTML('beforeend', carBox);
+  //     return '';
+  //   });
+  // });
+  garageCars.innerHTML = '';
+  cars.map((item:{name: string, color: string, id: number}) => {
+    const carBox = createCarBox(item.name, item.color, item.id);
+    garageCars.insertAdjacentHTML('beforeend', carBox);
+    return '';
   });
 }
+
+// ADD 100 CARS
+const add100CarsBtn = document.querySelector('.add-cars') as HTMLButtonElement;
+add100CarsBtn.addEventListener('click', () => {
+  for (let i = 0; i < 10; i += 1) {
+    const randomBrandNum = generateRandomNumber(carBrands.length - 1);
+    const randomNameNum = generateRandomNumber(randomWords.length);
+    const randomColor = generateRandomColor();
+    const carDetails = {
+      name: `${carBrands[randomBrandNum]} ${randomWords[randomNameNum]}`,
+      color: `#${randomColor}`,
+    };
+    createCar(carDetails);
+    // .then((cardId) => {
+    //   displayCar(carDetails.name, carDetails.color, cardId);
+    // });
+  }
+  // pagination().then((cars) => {
+  //   displayAllCars(cars);
+  // });
+  displayCarsTotalNum();
+  displayTotalPages();
+});
+
+function generateRandomNumber(max: number): number {
+  const randomNum = Math.floor(Math.random() * max) + 1;
+  return randomNum;
+}
+function generateRandomColor(): string {
+  const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+  return randomColor;
+}
+
+// CARS NUM and PAGINATION
+const carsTotalNum = document.querySelector('.cars-amount__num') as HTMLElement;
+function displayCarsTotalNum() {
+  getCar().then((cars) => {
+    carsTotalNum.innerHTML = `${cars.length}`;
+  });
+}
+displayCarsTotalNum();
+
+// const paggination = document.querySelector('.pagination') as HTMLElement;
+const paginationCurrentPage = document.querySelector('.pagination__current') as HTMLButtonElement;
+const paginationTotalPages = document.querySelector('.pagination__total') as HTMLButtonElement;
+
+const paginationBtns = document.querySelector('.pagination-btn') as HTMLElement;
+
+paginationBtns.addEventListener('click', async (event) => {
+  let eventTarget = event.target as HTMLElement;
+  const totalPages = +paginationTotalPages.innerHTML;
+  console.log(totalPages);
+  let currentPage = +paginationCurrentPage.innerHTML;
+  // const allCars = await getCar();
+  if (eventTarget.classList.contains('btn-prev')) {
+    return;
+  }
+  if (eventTarget.classList.contains('btn-next')) {
+    currentPage += 1;
+    pagination(+currentPage).then((cars) => {
+      displayAllCars(cars);
+    });
+    paginationCurrentPage.innerHTML = `${currentPage}`;
+  }
+});
+function displayTotalPages() {
+  getCar().then((cars) => {
+    paginationTotalPages.innerHTML = `${Math.floor(cars.length / 7) + 1}`;
+  });
+}
+displayTotalPages();
+
+async function pagination(currentPage: number, _totalPages?:number) {
+  let carsPerPage: Array<{name: string, color: string, id: number}>;
+  const cars = await getCar();
+  let sart = 7 * (currentPage - 1);
+  carsPerPage = cars.slice(sart, sart + 7);
+  return carsPerPage;
+}
+
+window.addEventListener('load', () => {
+  console.log(paginationCurrentPage.innerHTML);
+  pagination(+paginationCurrentPage.innerHTML).then((cars) => {
+    displayAllCars(cars);
+  });
+});
