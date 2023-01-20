@@ -39,8 +39,7 @@ function createCarBox(carName: string, carColor: string, carID?: number) {
     </div>
   </div>
   <div class="car__path">
-    <div class="car-img">
-      <img class="car-image" src="../src/assets/images/car.svg" alt="" width="50" height="30">
+    <div class="car-img"  style="background-color:${carColor};" >
     </div>
     <div class="car__path-line"></div>
   </div>

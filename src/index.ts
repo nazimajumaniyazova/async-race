@@ -38,6 +38,12 @@ const createCarColor = document.querySelector('.create-car__color') as HTMLSelec
 const createCarName = document.querySelector('.create-car__name') as HTMLInputElement;
 const createCarSelectBrand = document.querySelector('.create-car__brands') as HTMLSelectElement;
 
+// const paggination = document.querySelector('.pagination') as HTMLElement;
+const paginationCurrentPage = document.querySelector('.pagination__current') as HTMLButtonElement;
+const paginationTotalPages = document.querySelector('.pagination__total') as HTMLButtonElement;
+
+const paginationBtns = document.querySelector('.pagination-btn') as HTMLElement;
+
 async function createCar(carDetails: object) {
   let carId: number;
   const response = await fetch('http://127.0.0.1:3000/garage', {
@@ -90,6 +96,21 @@ async function getCar(carID?: number) {
   const cars: Array<{name: string, color: string, id: number}> = data;
   return cars;
 }
+
+async function startCar(carId: number): Promise<{velocity: number, distance: number}> {
+  const response = await fetch(`http://127.0.0.1:3000/engine?id=${carId}&status=started`, {
+    method: 'PATCH',
+  });
+  const data = await response.json();
+  return data;
+}
+async function driveMode(carId: number): Promise<{success: boolean}> {
+  const response = await fetch(`http://127.0.0.1:3000/engine?id=${carId}&status=drive`, {
+    method: 'PATCH',
+  });
+  const data = await response.json();
+  return data;
+}
 createCarBtn.addEventListener('click', async () => {
   const carDetails = {
     name: `${createCarSelectBrand.value} ${createCarName.value}`,
@@ -101,9 +122,9 @@ createCarBtn.addEventListener('click', async () => {
   //   displayCar(carDetails.name, carDetails.color, catId);
   // })
   await createCar(carDetails);
-  // pagination().then((cars) => {
-  //   displayAllCars(cars);
-  // });
+  pagination(+paginationCurrentPage.innerHTML).then((cars) => {
+    displayAllCars(cars);
+  });
   displayCarsTotalNum();
   displayTotalPages();
 });
@@ -114,20 +135,20 @@ const garageCars = document.querySelector('.garage__cars') as HTMLElement;
 // const editCar = document.querySelector('.edit-car') as HTMLElement;
 // const updateBtn = document.querySelector('.update-btn') as HTMLButtonElement;
 
-garageCars.addEventListener('click', (event: Event) => {
+garageCars.addEventListener('click', async (event: Event) => {
   const eventTarget = event?.target as HTMLElement;
   const eventTargetClosest = eventTarget.closest('.car__box') as HTMLElement;
   const editCar = eventTargetClosest.querySelector('.edit-car') as HTMLElement;
+  const carId = eventTargetClosest?.getAttribute('data-id')!;
   // const updateCarBtn = eventTargetClosest.querySelector('.update-btn') as HTMLButtonElement;
   // const updateBTN = eventTargetClosest.querySelector('.update-btn') as HTMLButtonElement;
   if (eventTarget.classList.contains('car__box__remove')) {
-    const carId = eventTargetClosest?.getAttribute('data-id')!;
     removeCar(+carId);
     eventTargetClosest?.remove();
     displayCarsTotalNum();
-    // pagination().then((cars) => {
-    //   displayAllCars(cars);
-    // });
+    pagination(+paginationCurrentPage.innerHTML).then((cars) => {
+      displayAllCars(cars);
+    });
   }
   if (eventTarget.classList.contains('car__box__edit')) {
     editCar.classList.remove('show');
@@ -136,9 +157,34 @@ garageCars.addEventListener('click', (event: Event) => {
   if (eventTarget.classList.contains('update-btn')) {
     updateCurrentCar(eventTargetClosest);
   }
+  if (eventTarget.classList.contains('car__box__start')) {
+    let element = eventTargetClosest.querySelector('.car-img')! as HTMLElement;
+    const time = await getTime(+carId);
+    singleAnimate(time, element);
+    console.log(time);
+    // const canDrive = await driveMode(+carId);
+    // if (canDrive.success) {
+    //   singleAnimate(time, element);
+    // }
+  }
   console.log(eventTargetClosest);
 });
+function singleAnimate(time: number, element: HTMLElement) {
+  let start = Date.now();
+  let timer = setInterval(() => {
+    let timePassed = Date.now() - start;
 
+    if (timePassed >= time) {
+      clearInterval(timer);
+      return;
+    }
+    draw(timePassed, element);
+  }, 50);
+}
+function draw(timePassed: number, HtmlElement: HTMLElement) {
+  let element = HtmlElement;
+  element.style.transform = `translateX(${timePassed / 10}px)`;
+}
 // updateBtn?.addEventListener('click', (event: Event) => {
 //   const eventTarget = event?.target as HTMLElement;
 //   const eventTargetClosest = eventTarget?.closest('.car__box') as HTMLElement;
@@ -216,6 +262,9 @@ add100CarsBtn.addEventListener('click', () => {
   // pagination().then((cars) => {
   //   displayAllCars(cars);
   // });
+  pagination(+paginationCurrentPage.innerHTML).then((cars) => {
+    displayAllCars(cars);
+  });
   displayCarsTotalNum();
   displayTotalPages();
 });
@@ -237,12 +286,6 @@ function displayCarsTotalNum() {
   });
 }
 displayCarsTotalNum();
-
-// const paggination = document.querySelector('.pagination') as HTMLElement;
-const paginationCurrentPage = document.querySelector('.pagination__current') as HTMLButtonElement;
-const paginationTotalPages = document.querySelector('.pagination__total') as HTMLButtonElement;
-
-const paginationBtns = document.querySelector('.pagination-btn') as HTMLElement;
 
 paginationBtns.addEventListener('click', async (event) => {
   let eventTarget = event.target as HTMLElement;
@@ -277,8 +320,31 @@ async function pagination(currentPage: number, _totalPages?:number) {
 }
 
 window.addEventListener('load', () => {
-  console.log(paginationCurrentPage.innerHTML);
+  // console.log(paginationCurrentPage.innerHTML);
   pagination(+paginationCurrentPage.innerHTML).then((cars) => {
     displayAllCars(cars);
   });
 });
+
+// ANIMATE CAR
+// let start: null | number = null;
+// let element = document.getElementById('h1');
+
+// function step(timestamp) {
+//   if (!start) start = timestamp;
+//   let progress = timestamp - start;
+//   element.style.transform = `translateX(${Math.min(progress / 10, 200)}px)`;
+//   if (progress < 2000) {
+//     window.requestAnimationFrame(step);
+//   }
+// }
+async function getTime(carId: number) {
+  let velocity: number;
+  let distance: number;
+  let time: number;
+  const response = await startCar(carId);
+  velocity = response.velocity;
+  distance = response.distance;
+  time = distance / velocity;
+  return time;
+}

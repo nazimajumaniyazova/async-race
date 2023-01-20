@@ -189,7 +189,23 @@ select {
   height: 15px;
   line-height: 0;
 }
-
+.car-img {
+  width: 50px;
+  height: 25px;
+  // background-position: center;
+  // background-repeat: no-repeat;
+  // background-size:cover ;
+  // background-image: url('../assets/images/car.svg');
+  -webkit-mask-image: url('../assets/images/car.svg');
+  mask-image:  url('../assets/images/car.svg');
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  // background-color: #8cffa0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  margin-bottom: 3px;
+}
 .car__path {
 
 }
