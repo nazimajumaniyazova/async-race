@@ -44,7 +44,6 @@ function createCarBox(carName: string, carColor: string, carID?: number) {
     <div class="car__path-line"></div>
   </div>
   </div>`;
-  console.log(carColor);
   return carBox;
 }
 

@@ -38,6 +38,12 @@ input {
 select {
   background-color: transparent !important;
 }
+button {
+  &:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+}
 .btn {
   background-color: transparent;
   border: none;
@@ -51,6 +57,9 @@ select {
   font-size: 14px;
   line-height: 0;
   padding: 8px;
+  &:hover{
+    transform: scale(1.1);
+  }
 }
 //HEADER
 .header {

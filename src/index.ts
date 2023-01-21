@@ -1,3 +1,4 @@
+/* eslint-disable no-array-constructor */
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 /* eslint-disable prefer-const */
@@ -13,6 +14,9 @@ const sectionGarage = document.querySelector('.garage')!;
 const sectionWinners = document.querySelector('.winners')!;
 const menu = document.querySelector('.menu');
 const menuItems = document.querySelectorAll('.menu__item');
+
+// let animations:Array<number>;
+let animations:Array<{id: number}> = [];
 
 menu?.addEventListener('click', (event) => {
   const eventTarget = event.target as HTMLElement;
@@ -38,7 +42,6 @@ const createCarColor = document.querySelector('.create-car__color') as HTMLSelec
 const createCarName = document.querySelector('.create-car__name') as HTMLInputElement;
 const createCarSelectBrand = document.querySelector('.create-car__brands') as HTMLSelectElement;
 
-// const paggination = document.querySelector('.pagination') as HTMLElement;
 const paginationCurrentPage = document.querySelector('.pagination__current') as HTMLButtonElement;
 const paginationTotalPages = document.querySelector('.pagination__total') as HTMLButtonElement;
 
@@ -76,9 +79,10 @@ function updateCar(carId: number, carDetails: object) {
 
 function changeCar(singCarBox: HTMLElement, carName: string, carColor: string) {
   const carBoxName = singCarBox.querySelector('.car__box-name')!;
-  const carBoxColor = singCarBox.querySelector('.create-car__color')!;
+  //  const carBoxColor = singCarBox.querySelector('.create-car__color')!;
+  const carBoxColor = singCarBox.querySelector('.car-img')! as HTMLElement;
   carBoxName.innerHTML = carName;
-  carBoxColor.innerHTML = carColor;
+  carBoxColor.style.backgroundColor = carColor;
 }
 
 async function getCar(carID?: number) {
@@ -97,20 +101,24 @@ async function getCar(carID?: number) {
   return cars;
 }
 
-async function startCar(carId: number): Promise<{velocity: number, distance: number}> {
-  const response = await fetch(`http://127.0.0.1:3000/engine?id=${carId}&status=started`, {
+async function startOrStopCar(carId: number, status: 'started' | 'stopped'): Promise<{velocity: number, distance: number}> {
+  const response = await fetch(`http://127.0.0.1:3000/engine?id=${carId}&status=${status}`, {
     method: 'PATCH',
   });
   const data = await response.json();
   return data;
 }
-async function driveMode(carId: number): Promise<{success: boolean}> {
+async function driveMode(carId: number) {
   const response = await fetch(`http://127.0.0.1:3000/engine?id=${carId}&status=drive`, {
     method: 'PATCH',
-  });
+  }).catch();
+  if (response.status !== 200) {
+    return { success: false };
+  }
   const data = await response.json();
   return data;
 }
+
 createCarBtn.addEventListener('click', async () => {
   const carDetails = {
     name: `${createCarSelectBrand.value} ${createCarName.value}`,
@@ -132,16 +140,15 @@ createCarBtn.addEventListener('click', async () => {
 // UPDATE CAR
 
 const garageCars = document.querySelector('.garage__cars') as HTMLElement;
-// const editCar = document.querySelector('.edit-car') as HTMLElement;
-// const updateBtn = document.querySelector('.update-btn') as HTMLButtonElement;
 
 garageCars.addEventListener('click', async (event: Event) => {
   const eventTarget = event?.target as HTMLElement;
   const eventTargetClosest = eventTarget.closest('.car__box') as HTMLElement;
   const editCar = eventTargetClosest.querySelector('.edit-car') as HTMLElement;
   const carId = eventTargetClosest?.getAttribute('data-id')!;
-  // const updateCarBtn = eventTargetClosest.querySelector('.update-btn') as HTMLButtonElement;
-  // const updateBTN = eventTargetClosest.querySelector('.update-btn') as HTMLButtonElement;
+  const carButtons = eventTargetClosest?.querySelectorAll('.btn') as NodeListOf<HTMLButtonElement>;
+  const carStopBtn = eventTargetClosest.querySelector('.car__box__stop') as HTMLButtonElement;
+  let element = eventTargetClosest.querySelector('.car-img')! as HTMLElement;
   if (eventTarget.classList.contains('car__box__remove')) {
     removeCar(+carId);
     eventTargetClosest?.remove();
@@ -157,52 +164,50 @@ garageCars.addEventListener('click', async (event: Event) => {
   if (eventTarget.classList.contains('update-btn')) {
     updateCurrentCar(eventTargetClosest);
   }
+  let sid: number = 0;
   if (eventTarget.classList.contains('car__box__start')) {
-    let element = eventTargetClosest.querySelector('.car-img')! as HTMLElement;
+    carButtons.forEach((item) => {
+      let btn: HTMLButtonElement = item;
+      btn.disabled = true;
+    });
+    carStopBtn.disabled = false;
+    const distance = eventTargetClosest.querySelector<HTMLElement>('.car__path-line')?.offsetWidth as number - 50;
     const time = await getTime(+carId);
-    singleAnimate(time, element);
-    console.log(time);
-    // const canDrive = await driveMode(+carId);
-    // if (canDrive.success) {
-    //   singleAnimate(time, element);
-    // }
-  }
-  console.log(eventTargetClosest);
-});
-function singleAnimate(time: number, element: HTMLElement) {
-  let start = Date.now();
-  let timer = setInterval(() => {
-    let timePassed = Date.now() - start;
-
-    if (timePassed >= time) {
-      clearInterval(timer);
-      return;
+    startAnimation(element, +carId, distance, time);
+    const canDrive = await driveMode(+carId);
+    if (!canDrive.success) {
+      window.cancelAnimationFrame(animations[+carId].id);
     }
-    draw(timePassed, element);
-  }, 50);
+  }
+  if (eventTarget.classList.contains('car__box__stop')) {
+    window.cancelAnimationFrame(animations[+carId].id);
+    element.style.transform = 'translateX(0)';
+    await startOrStopCar(+carId, 'stopped');
+  }
+});
+
+function startAnimation(element: HTMLElement, elementId: number, distance:number, animationTime: number) {
+  let start: null | number = null;
+  const car: HTMLElement = element;
+  let stateId: number;
+  function animate(timestamp: number) {
+    if (!start) {
+      start = timestamp;
+    }
+    const progress = timestamp - start;
+    const passed = Math.round(progress * (distance / animationTime));
+    car.style.transform = `translateX(${Math.min(passed, distance)}px`;
+    if (passed < distance) {
+      stateId = window.requestAnimationFrame(animate);
+      animations[elementId] = { id: stateId };
+    } else {
+      window.cancelAnimationFrame(stateId);
+      window.cancelAnimationFrame(animations[elementId].id);
+    }
+  }
+  stateId = window.requestAnimationFrame(animate);
+  animations[elementId] = { id: stateId };
 }
-function draw(timePassed: number, HtmlElement: HTMLElement) {
-  let element = HtmlElement;
-  element.style.transform = `translateX(${timePassed / 10}px)`;
-}
-// updateBtn?.addEventListener('click', (event: Event) => {
-//   const eventTarget = event?.target as HTMLElement;
-//   const eventTargetClosest = eventTarget?.closest('.car__box') as HTMLElement;
-//   const updateCarBrand = eventTargetClosest?.querySelector('.create-car__brands') as HTMLSelectElement;
-//   const updateCarName = eventTargetClosest?.querySelector('.create-car__name') as HTMLInputElement;
-//   const updateCarColor = eventTargetClosest?.querySelector('.create-car__color') as HTMLInputElement;
-//   const updateCarDetails = {
-//     name: `${updateCarBrand.value} ${updateCarName.value}`,
-//     color: updateCarColor.value,
-//   };
-//   updateCarBrand.value = 'Audi';
-//   updateCarName.value = '';
-//   const carId = eventTargetClosest?.getAttribute('data-id')!;
-//   updateCar(+carId, updateCarDetails);
-//   editCar.classList.remove('show');
-//   editCar.classList.add('hide');
-//   changeCar(eventTargetClosest, updateCarDetails.name, updateCarDetails.color);
-// });
 
 function updateCurrentCar(eventTargetBox: HTMLElement) {
   const updateCarBrand = eventTargetBox?.querySelector('.create-car__brands') as HTMLSelectElement;
@@ -222,10 +227,6 @@ function updateCurrentCar(eventTargetBox: HTMLElement) {
   changeCar(eventTargetBox, updateCarDetails.name, updateCarDetails.color);
 }
 // Display All CARS
-// function displayCar(carName: string, carColor: string, carId: number) {
-//   const carBox = createCarBox(carName, carColor, carId);
-//   garageCars.insertAdjacentHTML('beforeend', carBox);
-// }
 
 function displayAllCars(cars:Array<{name: string, color: string, id: number}>) {
   // getCar().then((response) => {
@@ -255,13 +256,7 @@ add100CarsBtn.addEventListener('click', () => {
       color: `#${randomColor}`,
     };
     createCar(carDetails);
-    // .then((cardId) => {
-    //   displayCar(carDetails.name, carDetails.color, cardId);
-    // });
   }
-  // pagination().then((cars) => {
-  //   displayAllCars(cars);
-  // });
   pagination(+paginationCurrentPage.innerHTML).then((cars) => {
     displayAllCars(cars);
   });
@@ -290,9 +285,7 @@ displayCarsTotalNum();
 paginationBtns.addEventListener('click', async (event) => {
   let eventTarget = event.target as HTMLElement;
   const totalPages = +paginationTotalPages.innerHTML;
-  console.log(totalPages);
   let currentPage = +paginationCurrentPage.innerHTML;
-  // const allCars = await getCar();
   if (eventTarget.classList.contains('btn-prev')) {
     return;
   }
@@ -320,31 +313,19 @@ async function pagination(currentPage: number, _totalPages?:number) {
 }
 
 window.addEventListener('load', () => {
-  // console.log(paginationCurrentPage.innerHTML);
   pagination(+paginationCurrentPage.innerHTML).then((cars) => {
     displayAllCars(cars);
   });
 });
 
 // ANIMATE CAR
-// let start: null | number = null;
-// let element = document.getElementById('h1');
-
-// function step(timestamp) {
-//   if (!start) start = timestamp;
-//   let progress = timestamp - start;
-//   element.style.transform = `translateX(${Math.min(progress / 10, 200)}px)`;
-//   if (progress < 2000) {
-//     window.requestAnimationFrame(step);
-//   }
-// }
 async function getTime(carId: number) {
   let velocity: number;
   let distance: number;
   let time: number;
-  const response = await startCar(carId);
+  const response = await startOrStopCar(carId, 'started');
   velocity = response.velocity;
   distance = response.distance;
-  time = distance / velocity;
+  time = Math.round(distance / velocity);
   return time;
 }
