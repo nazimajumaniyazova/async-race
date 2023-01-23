@@ -67,6 +67,7 @@ const allBtns = document.querySelectorAll('.btn') as NodeListOf<HTMLButtonElemen
 let carsBtns: NodeListOf<HTMLButtonElement>;
 const resetBtn = document.querySelector('.reset-btn') as HTMLButtonElement;
 resetBtn.disabled = true;
+
 async function createCar(carDetails: object) {
   let carId: number;
   const response = await fetch('http://127.0.0.1:3000/garage', {
