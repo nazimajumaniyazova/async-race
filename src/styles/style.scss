@@ -86,7 +86,7 @@ button {
 }
 //MAIN
 .main {
-  
+  height: 100vh;
 }
 //GARAGE
 .garage {
@@ -103,6 +103,7 @@ button {
 .garage__options {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   align-items: center;
   padding: 20px 0;
 }
@@ -117,6 +118,13 @@ button {
 }
 .pagination {
 
+}
+.btn-prev,
+.btn-next{
+    &.non-active {
+      opacity: .5;
+      cursor: auto;
+    }
 }
 .create-car {
   display: flex;
@@ -198,6 +206,12 @@ button {
   height: 15px;
   line-height: 0;
 }
+.car__box {
+  position: relative;
+  // &.winner {
+  //   transform: scale(1.1);
+  // }
+}
 .car-img {
   width: 50px;
   height: 25px;
@@ -225,11 +239,11 @@ button {
 }
 //FOOTER
 .footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 20px 0;
+  // position: absolute;
+  // bottom: 0;
+  // left: 0;
+  // width: 100%;
+  // padding: 20px 0;
   color: rgba(255, 255, 255, 0.5);
 }
 .footer__wrapper {
@@ -260,5 +274,42 @@ button {
     line-height: 5px;
     display: flex;
     align-items: center;
+  }
+}
+.winner-message{
+  font-size: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+}
+
+// Table
+table {
+  padding-top: 50px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  thead tr{
+    display: flex;
+    justify-content: space-between;
+    td {
+      flex: 1;
+      text-align: start;
+      font-size: 16px;
+      display: flex;
+      gap:  5px;
+    }
+  }
+  tbody tr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    td {
+      flex: 1;
+      text-align: start;
+    }
   }
 }

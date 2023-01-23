@@ -1,5 +1,5 @@
 function createCarBox(carName: string, carColor: string, carID?: number) {
-  const carBox = ` <div class="car__box" data-id = "${carID}">
+  const carBox = ` <div class="car__box winner" data-id = "${carID}">
   <div class="car__settings">
     <div class="car__settings-left">
       <button class="btn car__box__remove">🗙</button>
@@ -48,3 +48,25 @@ function createCarBox(carName: string, carColor: string, carID?: number) {
 }
 
 export default createCarBox;
+
+export const createWinnerBox = (
+  carName: string,
+  carColor: string,
+  carID: number,
+  time: number,
+  wins: number,
+  number: number,
+) => {
+  const winnerBox = `
+  <tr data-id="${carID}">
+    <td>${number}</td>
+    <td>
+      <div class="car-img"  style="background-color:${carColor};" >
+    </td>
+    <td>${carName}</td>
+    <td>${wins}</td>
+    <td>${time}</td>
+  </tr>
+  `;
+  return winnerBox;
+};
