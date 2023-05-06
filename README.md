@@ -13,4 +13,4 @@ To get smooth animation effect, was used window.requestAnimationFrame() method
 ### Link to deploy: https://nazimajumaniyazova.github.io/async-race-deploy/
 
 ### NOTE: 
-Please, first intall the ![app server](https://github.com/nazimajumaniyazova/async-race-api), run the server, then run the app 
+Please, first intall the [app server](https://github.com/nazimajumaniyazova/async-race-api), run the server, then run the app 
